@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-lost_item_network}
+      MYSQL_USER: ${DB_USERNAME:-lostapp}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      DB_URL: jdbc:mysql://db:3306/${DB_NAME:-lost_item_network}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: ${DB_USERNAME:-lostapp}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@campus.example}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:?Set INITIAL_ADMIN_PASSWORD in .env}
+      MATCH_CATEGORY_WEIGHT: ${MATCH_CATEGORY_WEIGHT:-0.25}
+      MATCH_DESCRIPTION_WEIGHT: ${MATCH_DESCRIPTION_WEIGHT:-0.35}
+      MATCH_LOCATION_WEIGHT: ${MATCH_LOCATION_WEIGHT:-0.25}
+      MATCH_DATE_WEIGHT: ${MATCH_DATE_WEIGHT:-0.15}
+      MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.55}
+      MATCH_DATE_WINDOW_DAYS: ${MATCH_DATE_WINDOW_DAYS:-30}
+    ports:
+      - "8080:8080"
+volumes:
+  mysql_data:

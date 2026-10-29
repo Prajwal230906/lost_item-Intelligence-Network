@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin review · Campus Find</title><link rel="stylesheet" href="/css/app.css"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+<main class="page-wrap">
+  <div th:replace="~{fragments :: flash}"></div>
+  <span class="eyebrow">Campus operations</span><h1>Review center</h1><p class="muted">Review ownership claims and the proof submitted by the person who reported the item lost.</p>
+  <section class="dashboard-section"><h2>Claims awaiting review <span class="count" th:text="${#lists.size(claims)}">0</span></h2>
+    <div class="match-list">
+      <article class="match-row" th:each="c:${claims}">
+        <div class="score-ring" th:text="${#numbers.formatDecimal(c.match.score,1,0)+'%'}"></div>
+        <div class="match-content"><span class="eyebrow">Claim submitted by <span th:text="${c.claimant.name}"></span></span>
+          <h3 th:text="${c.match.foundReport.title}">Found item</h3>
+          <p th:text="${c.match.foundReport.description}"></p>
+          <small>Lost report: <span th:text="${c.match.lostReport.title}"></span> · <span th:text="${c.match.foundReport.location}"></span> · <span th:text="${c.match.foundReport.itemDate}"></span></small>
+          <p><b>Claimant's proof:</b> <span th:text="${c.proofDetails}"></span></p>
+          <form class="inline-actions" th:action="@{/admin/claims/{id}/review(id=${c.id})}" method="post">
+            <input type="text" name="adminNote" maxlength="500" placeholder="Optional note for claimant">
+            <button class="button button-small button-primary" name="decision" value="APPROVED">Approve claim</button>
+            <button class="button button-small button-quiet" name="decision" value="REJECTED">Reject claim</button>
+          </form>
+        </div>
+      </article>
+      <div class="empty-state" th:if="${#lists.isEmpty(claims)}">No item claims are waiting for review.</div>
+    </div>
+  </section>
+  <section class="dashboard-section"><h2>Open reports</h2><div class="table-wrap"><table><thead><tr><th>Item</th><th>Type</th><th>Date</th><th>Area</th><th>Update status</th></tr></thead><tbody><tr th:each="r:${reports}"><td><b th:text="${r.title}"></b><small th:text="${r.category}"></small></td><td th:text="${r.type}"></td><td th:text="${r.itemDate}"></td><td th:text="${r.location}"></td><td><form class="inline-actions" th:action="@{/admin/reports/{id}/status(id=${r.id})}" method="post"><select name="status"><option value="UNDER_REVIEW">Under review</option><option value="RESOLVED">Resolved</option><option value="REJECTED">Rejected</option></select><button class="button button-small button-primary">Save</button></form></td></tr></tbody></table></div></section>
+</main>
+<div th:replace="~{fragments :: footer}"></div>
+</body></html>

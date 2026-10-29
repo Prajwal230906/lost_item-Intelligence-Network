@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My activity · Campus Find</title><link rel="stylesheet" href="/css/app.css"></head>
+<body>
+<div th:replace="~{fragments :: nav}"></div>
+<main class="page-wrap">
+  <div th:replace="~{fragments :: flash}"></div>
+  <div class="page-heading"><div><span class="eyebrow">Your campus activity</span><h1>My reports</h1><p class="muted">Review possible found items and send proof to campus administration if one is yours.</p></div><a class="button button-primary" href="/reports/new">＋ New report</a></div>
+  <section class="dashboard-section" th:if="${!#lists.isEmpty(notifications)}"><h2>Notifications</h2><p class="notice" th:each="n:${notifications}" th:text="${n.message}"></p></section>
+  <section class="dashboard-section"><h2>Possible matches <span class="count" th:text="${#lists.size(matches)}">0</span></h2>
+    <div class="match-list">
+      <article class="match-row" th:each="m:${matches}" th:with="claim=${claimByMatch[m.id]}">
+        <div class="score-ring" th:text="${#numbers.formatDecimal(m.score,1,0)+'%'}"></div>
+        <div class="match-content">
+          <span class="eyebrow" th:text="${m.lostReport.owner.id == currentUserId ? 'Found item that may match your report' : 'Possible lost-item connection'}">Possible match</span>
+          <h3 th:text="${m.lostReport.owner.id == currentUserId ? m.foundReport.title : m.lostReport.title}">Possible item</h3>
+          <p th:text="${m.lostReport.owner.id == currentUserId ? m.foundReport.description : m.lostReport.description}">Item details</p>
+          <small>Category: <span th:text="${m.lostReport.owner.id == currentUserId ? m.foundReport.category : m.lostReport.category}"></span> · Location: <span th:text="${m.lostReport.owner.id == currentUserId ? m.foundReport.location : m.lostReport.location}"></span> · Date: <span th:text="${m.lostReport.owner.id == currentUserId ? m.foundReport.itemDate : m.lostReport.itemDate}"></span></small>
+          <p th:text="${m.explanation}"></p>
+          <div th:if="${m.lostReport.owner.id == currentUserId}">
+            <p class="notice" th:if="${claim != null}" th:text="${'Claim status: '+claim.status+(claim.adminNote == null ? '' : ' · Admin note: '+claim.adminNote)}"></p>
+            <form class="form-stack" th:if="${(claim == null or claim.status.name() == 'REJECTED') and m.lostReport.status.name() == 'OPEN' and m.foundReport.status.name() == 'OPEN'}" th:action="@{/matches/{id}/claim(id=${m.id})}" method="post">
+              <label>Proof that identifies your item<textarea name="proofDetails" maxlength="2000" required placeholder="For example: serial number, distinctive marks, contents, or other details that only the owner would know."></textarea></label>
+              <small>These details are visible only to you and campus administrators.</small>
+              <button class="button button-primary" type="submit">Send claim to admin</button>
+            </form>
+            <small th:if="${claim != null and claim.status.name() == 'PENDING'}">Your proof has been sent. The administrator will review your claim.</small>
+          </div>
+          <small th:if="${m.lostReport.owner.id != currentUserId}">A claim can be submitted by the person who filed the lost-item report.</small>
+        </div>
+      </article>
+      <div class="empty-state" th:if="${#lists.isEmpty(matches)}"><span class="empty-symbol">✦</span><b>No possible matches yet</b><p>When a similar found report is published, it will appear here with the factors that contributed to its score.</p></div>
+    </div>
+  </section>
+  <section class="dashboard-section"><h2>Your reports <span class="count" th:text="${#lists.size(reports)}">0</span></h2><div class="table-wrap"><table><thead><tr><th>Report</th><th>Type</th><th>Date</th><th>Location</th><th>Status</th><th></th></tr></thead><tbody><tr th:each="r:${reports}"><td><b th:text="${r.title}"></b><small th:text="${r.category}"></small></td><td th:text="${r.type}"></td><td th:text="${r.itemDate}"></td><td th:text="${r.location}"></td><td><span class="status-tag" th:text="${r.status}"></span></td><td><a class="text-link" th:href="@{/reports/{id}(id=${r.id})}">Open →</a></td></tr></tbody></table><div class="empty-state" th:if="${#lists.isEmpty(reports)}"><b>Your first report starts here.</b><p>Share a few details and help the campus community reconnect with a missing item.</p><a href="/reports/new" class="text-link">Create a report →</a></div></div></section>
+</main>
+<div th:replace="~{fragments :: footer}"></div>
+</body></html>
