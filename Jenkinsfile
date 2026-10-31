@@ -1,9 +1,7 @@
 pipeline {
   agent any
 
-  environment {
-    PATH+DOCKER = 'C:/Users/cheel/AppData/Local/Programs/DockerDesktop/resources/bin'
-  }
+  
   parameters {
     booleanParam(name: 'RUN_SONAR', defaultValue: true, description: 'Run SonarQube analysis and enforce its quality gate')
     booleanParam(name: 'PUBLISH_IMAGE', defaultValue: false, description: 'Push the built image to Docker Hub after all checks pass')
@@ -23,13 +21,17 @@ pipeline {
 
   stages {
     stage('Checkout') {
-      steps {
-        script {
-          def checkoutDetails = checkout scm
-          env.IMAGE_TAG = "${env.BUILD_NUMBER}-${checkoutDetails.GIT_COMMIT.take(12)}"
-        }
+  steps {
+    script {
+      if (!isUnix()) {
+        env.PATH = "C:/Users/cheel/AppData/Local/Programs/DockerDesktop/resources/bin;" + env.PATH
       }
+
+      def checkoutDetails = checkout scm
+      env.IMAGE_TAG = "${env.BUILD_NUMBER}-${checkoutDetails.GIT_COMMIT.take(12)}"
     }
+  }
+}
 
     stage('Maven Verify and JUnit') {
       steps {
