@@ -93,7 +93,10 @@ pipeline {
 
     stage('Run Application') {
       steps {
-        withCredentials([usernamePassword(credentialsId: 'application-db-credentials', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD')]) {
+        withCredentials([
+          usernamePassword(credentialsId: 'application-db-credentials', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD'),
+          string(credentialsId: 'initial-admin-password', variable: 'INITIAL_ADMIN_PASSWORD')
+        ]) {
           script {
             if (isUnix()) {
               sh '''
@@ -102,14 +105,14 @@ pipeline {
                   --publish 127.0.0.1:8093:8080 \\
                   --add-host=host.docker.internal:host-gateway \\
                   --env 'DB_URL=jdbc:mysql://host.docker.internal:3306/lost_item_network?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \\
-                  --env DB_USERNAME --env DB_PASSWORD \\
+                  --env DB_USERNAME --env DB_PASSWORD --env INITIAL_ADMIN_PASSWORD \\
                   "$IMAGE_NAME:$IMAGE_TAG"
               '''
             } else {
               powershell '''
                 $ErrorActionPreference = 'Stop'
                 docker rm --force lost-item-intelligence-network-ci 2>$null | Out-Null
-                docker run --detach --name lost-item-intelligence-network-ci --restart unless-stopped --publish 127.0.0.1:8093:8080 --add-host=host.docker.internal:host-gateway --env 'DB_URL=jdbc:mysql://host.docker.internal:3306/lost_item_network?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' --env DB_USERNAME --env DB_PASSWORD "${env:IMAGE_NAME}:$env:IMAGE_TAG"
+                docker run --detach --name lost-item-intelligence-network-ci --restart unless-stopped --publish 127.0.0.1:8093:8080 --add-host=host.docker.internal:host-gateway --env 'DB_URL=jdbc:mysql://host.docker.internal:3306/lost_item_network?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' --env DB_USERNAME --env DB_PASSWORD --env INITIAL_ADMIN_PASSWORD "${env:IMAGE_NAME}:$env:IMAGE_TAG"
                 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
                 $ready = $false
