@@ -47,9 +47,9 @@ pipeline {
           withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
             script {
               if (isUnix()) {
-                sh 'mvn -B sonar:sonar -Dsonar.host.url="$SONAR_HOST_URL" -Dsonar.qualitygate.wait=false'
+                sh 'mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url="$SONAR_HOST_URL" -Dsonar.qualitygate.wait=false'
               } else {
-                bat 'mvn -B sonar:sonar -Dsonar.host.url="%SONAR_HOST_URL%" -Dsonar.qualitygate.wait=false'
+                bat 'mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.host.url="%SONAR_HOST_URL%" -Dsonar.qualitygate.wait=false'
               }
             }
           }
