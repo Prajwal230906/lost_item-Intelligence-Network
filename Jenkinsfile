@@ -86,6 +86,48 @@ pipeline {
       }
     }
 
+    stage('Run Application') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'application-db-credentials', usernameVariable: 'DB_USERNAME', passwordVariable: 'DB_PASSWORD')]) {
+          script {
+            if (isUnix()) {
+              sh '''
+                docker rm --force lost-item-intelligence-network-ci >/dev/null 2>&1 || true
+                docker run --detach --name lost-item-intelligence-network-ci --restart unless-stopped \\
+                  --publish 127.0.0.1:8093:8080 \\
+                  --add-host=host.docker.internal:host-gateway \\
+                  --env 'DB_URL=jdbc:mysql://host.docker.internal:3306/lost_item_network?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' \\
+                  --env DB_USERNAME --env DB_PASSWORD \\
+                  "$IMAGE_NAME:$IMAGE_TAG"
+              '''
+            } else {
+              powershell '''
+                $ErrorActionPreference = 'Stop'
+                docker rm --force lost-item-intelligence-network-ci 2>$null | Out-Null
+                docker run --detach --name lost-item-intelligence-network-ci --restart unless-stopped --publish 127.0.0.1:8093:8080 --add-host=host.docker.internal:host-gateway --env 'DB_URL=jdbc:mysql://host.docker.internal:3306/lost_item_network?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC' --env DB_USERNAME --env DB_PASSWORD "${env:IMAGE_NAME}:$env:IMAGE_TAG"
+                if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+                $ready = $false
+                for ($attempt = 0; $attempt -lt 24; $attempt++) {
+                  try {
+                    Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost:8093/login' -TimeoutSec 5 | Out-Null
+                    $ready = $true
+                    break
+                  } catch {
+                    Start-Sleep -Seconds 5
+                  }
+                }
+                if (-not $ready) {
+                  docker logs lost-item-intelligence-network-ci
+                  throw 'Application did not become ready at http://localhost:8093/login.'
+                }
+              '''
+            }
+          }
+        }
+      }
+    }
+
     stage('Publish Docker Image') {
       when { expression { params.PUBLISH_IMAGE } }
       steps {
