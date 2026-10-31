@@ -1,6 +1,9 @@
 pipeline {
   agent any
 
+  environment {
+    PATH+DOCKER = 'C:/Users/cheel/AppData/Local/Programs/DockerDesktop/resources/bin'
+  }
   parameters {
     booleanParam(name: 'RUN_SONAR', defaultValue: true, description: 'Run SonarQube analysis and enforce its quality gate')
     booleanParam(name: 'PUBLISH_IMAGE', defaultValue: false, description: 'Push the built image to Docker Hub after all checks pass')
