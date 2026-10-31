@@ -37,8 +37,7 @@ The supplied project instructions specify weights of category 25%, description 3
 
 ## Operations
 
-- Jenkins: `Jenkinsfile` runs Maven verification and an optional SonarQube stage.
-- SonarQube: run `mvn sonar:sonar` with server URL and token configured in Jenkins credentials.
+- Jenkins, Maven, JUnit, SonarQube, and Docker pipeline setup: see [`docs/CI-CD.md`](docs/CI-CD.md).
 - Git workflow: `docs/BRANCHING.md`.
 - Synthetic demonstration scenario: `docs/DEMO_DATA.md`.
 - REST endpoints are under `/api`; public pages use Thymeleaf.
